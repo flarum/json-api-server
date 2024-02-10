@@ -124,16 +124,23 @@ class Serializer
      */
     public function addIncluded(Relationship $field, $model, ?array $include): array
     {
-        $relatedResource = $this->resourceForModel($field, $model);
+        if (is_object($model)) {
+            $relatedResource = $this->resourceForModel($field, $model);
 
-        if ($include === null) {
-            return [
-                'type' => $relatedResource->type(),
-                'id' => $relatedResource->getId($model, $this->context),
+            if ($include === null) {
+                return [
+                    'type' => $relatedResource->type(),
+                    'id' => $relatedResource->getId($model, $this->context),
+                ];
+            }
+
+            $data = $this->addToMap($relatedResource, $model, $include);
+        } else {
+            $data = [
+                'type' => $field->collections[0],
+                'id' => (string) $model,
             ];
         }
-
-        $data = $this->addToMap($relatedResource, $model, $include);
 
         return [
             'type' => $data['type'],
