@@ -1,5 +1,5 @@
 {
-    "name": "tobyz/json-api-server",
+    "name": "flarum/json-api-server",
     "description": "A fully automated JSON:API server implementation in PHP.",
     "require": {
         "php": ">=8.1",
@@ -41,5 +41,10 @@
     },
     "config": {
         "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
     }
 }
