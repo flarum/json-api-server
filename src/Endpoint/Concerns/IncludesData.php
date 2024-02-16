@@ -63,6 +63,7 @@ trait IncludesData
         array $resources,
         array $include,
         string $path = '',
+        bool $allowInvalid = false,
     ): void {
         foreach ($include as $name => $nested) {
             foreach ($resources as $resource) {
@@ -82,14 +83,16 @@ trait IncludesData
                     ? array_map(fn($type) => $context->api->getResource($type), $types)
                     : array_values($context->api->resources);
 
-                $this->validateInclude($context, $relatedResources, $nested, $name . '.');
+                $this->validateInclude($context, $relatedResources, $nested, $name . '.', $allowInvalid || $field->collection);
 
                 continue 2;
             }
 
-            throw (new BadRequestException("Invalid include [$path$name]"))->setSource([
-                'parameter' => 'include',
-            ]);
+            if (! $allowInvalid) {
+                throw (new BadRequestException("Invalid include [$path$name]"))->setSource([
+                    'parameter' => 'include',
+                ]);
+            }
         }
     }
 }
