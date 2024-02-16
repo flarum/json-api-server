@@ -57,6 +57,10 @@ class ToOne extends Relationship
             return null;
         }
 
+        if (count($this->collections) === 1 && ! $this->collection) {
+            $value['data']['type'] ??= $this->collections[0];
+        }
+
         try {
             return $this->findResourceForIdentifier($value['data'], $context);
         } catch (Sourceable $e) {
