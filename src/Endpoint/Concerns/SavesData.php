@@ -34,9 +34,13 @@ trait SavesData
         }
 
         if (!isset($body['data']['type'])) {
-            throw (new BadRequestException('data.type must be present'))->setSource([
-                'pointer' => '/data/type',
-            ]);
+            if (isset($context->collection->resources()[0])) {
+                $body['data']['type'] = $context->collection->resources()[0];
+            } else {
+                throw (new BadRequestException('data.type must be present'))->setSource([
+                    'pointer' => '/data/type',
+                ]);
+            }
         }
 
         if (isset($context->model)) {
