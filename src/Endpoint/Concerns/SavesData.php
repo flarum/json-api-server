@@ -44,13 +44,14 @@ trait SavesData
         }
 
         if (isset($context->model)) {
-            if (!isset($body['data']['id'])) {
-                throw (new BadRequestException('data.id must be present'))->setSource([
-                    'pointer' => '/data/id',
-                ]);
-            }
+            // commented out to reduce strictness.
+//            if (!isset($body['data']['id'])) {
+//                throw (new BadRequestException('data.id must be present'))->setSource([
+//                    'pointer' => '/data/id',
+//                ]);
+//            }
 
-            if ($body['data']['id'] !== $context->resource->getId($context->model, $context)) {
+            if (isset($body['data']['id']) && $body['data']['id'] !== $context->resource->getId($context->model, $context)) {
                 throw (new ConflictException('data.id does not match the resource ID'))->setSource([
                     'pointer' => '/data/id',
                 ]);
