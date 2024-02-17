@@ -74,31 +74,43 @@ class JsonApi implements RequestHandlerInterface
     }
 
     /**
-     * Get a collection by name.
+     * Get a collection by name or class.
      *
      * @throws ResourceNotFoundException if the collection has not been defined.
      */
     public function getCollection(string $type): Collection
     {
-        if (!isset($this->collections[$type])) {
-            throw new ResourceNotFoundException($type);
+        if (isset($this->collections[$type])) {
+            return $this->collections[$type];
         }
 
-        return $this->collections[$type];
+        foreach ($this->collections as $instance) {
+            if ($instance instanceof $type) {
+                return $instance;
+            }
+        }
+
+        throw new ResourceNotFoundException($type);
     }
 
     /**
-     * Get a resource by type.
+     * Get a resource by type or class.
      *
      * @throws ResourceNotFoundException if the resource has not been defined.
      */
     public function getResource(string $type): Resource
     {
-        if (!isset($this->resources[$type])) {
-            throw new ResourceNotFoundException($type);
+        if (isset($this->resources[$type])) {
+            return $this->resources[$type];
         }
 
-        return $this->resources[$type];
+        foreach ($this->resources as $instance) {
+            if ($instance instanceof $type) {
+                return $instance;
+            }
+        }
+
+        throw new ResourceNotFoundException($type);
     }
 
     /**
