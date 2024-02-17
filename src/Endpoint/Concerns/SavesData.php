@@ -23,7 +23,7 @@ trait SavesData
      *
      * @throws BadRequestException if the `data` member is invalid.
      */
-    private function parseData(Context $context): array
+    final protected function parseData(Context $context): array
     {
         $body = (array) $context->body();
 
@@ -86,7 +86,7 @@ trait SavesData
     /**
      * Assert that the fields contained within a data object are valid.
      */
-    private function assertFieldsValid(Context $context, array $data): void
+    final protected function assertFieldsValid(Context $context, array $data): void
     {
         $this->assertFieldsExist($context, $data);
         $this->assertFieldsWritable($context, $data);
@@ -97,7 +97,7 @@ trait SavesData
      *
      * @throws BadRequestException if a field is unknown.
      */
-    private function assertFieldsExist(Context $context, array $data): void
+    final protected function assertFieldsExist(Context $context, array $data): void
     {
         $fields = $context->fields($context->resource);
 
@@ -117,7 +117,7 @@ trait SavesData
      *
      * @throws ForbiddenException if a field is not writable.
      */
-    private function assertFieldsWritable(Context $context, array $data): void
+    final protected function assertFieldsWritable(Context $context, array $data): void
     {
         foreach ($context->fields($context->resource) as $field) {
             if (!has_value($data, $field)) {
@@ -135,7 +135,7 @@ trait SavesData
     /**
      *
      */
-    private function deserializeValues(Context $context, array &$data): void
+    final protected function deserializeValues(Context $context, array &$data): void
     {
         foreach ($context->fields($context->resource) as $field) {
             if (!has_value($data, $field)) {
@@ -157,7 +157,7 @@ trait SavesData
     /**
      * Set field values from a data object to the model instance.
      */
-    private function setValues(Context $context, array $data): void
+    final protected function setValues(Context $context, array $data): void
     {
         foreach ($context->fields($context->resource) as $field) {
             if (!has_value($data, $field)) {
@@ -173,7 +173,7 @@ trait SavesData
     /**
      * Run any field save callbacks.
      */
-    private function saveFields(Context $context, array $data): void
+    final protected function saveFields(Context $context, array $data): void
     {
         foreach ($context->fields($context->resource) as $field) {
             if (!has_value($data, $field)) {

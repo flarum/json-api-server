@@ -11,7 +11,7 @@ trait ShowsResources
     use HasMeta;
     use IncludesData;
 
-    private function showResource(Context $context, mixed $model): array
+    protected function showResource(Context $context, mixed $model): array
     {
         $serializer = new Serializer($context);
 

@@ -78,7 +78,7 @@ class Create implements Endpoint
             ->withHeader('Location', $document['data']['links']['self']);
     }
 
-    private function fillDefaultValues(Context $context, array &$data): void
+    final protected function fillDefaultValues(Context $context, array &$data): void
     {
         foreach ($context->fields($context->resource) as $field) {
             if (!has_value($data, $field) && ($default = $field->default)) {

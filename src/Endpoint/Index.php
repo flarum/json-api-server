@@ -132,7 +132,7 @@ class Index implements Endpoint
         return json_api_response(compact('data', 'included', 'meta', 'links'));
     }
 
-    private function applySorts($query, Context $context): void
+    final protected function applySorts($query, Context $context): void
     {
         if (!($sortString = $context->queryParam('sort', $this->defaultSort))) {
             return;
@@ -154,7 +154,7 @@ class Index implements Endpoint
         }
     }
 
-    private function applyFilters($query, Context $context): void
+    final protected function applyFilters($query, Context $context): void
     {
         if (!($filters = $context->queryParam('filter'))) {
             return;

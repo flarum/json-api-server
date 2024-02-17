@@ -17,7 +17,7 @@ trait IncludesData
         return $this;
     }
 
-    private function getInclude(Context $context): array
+    protected function getInclude(Context $context): array
     {
         if (
             $includeString = $context->request->getQueryParams()['include'] ?? $this->defaultInclude
@@ -39,7 +39,7 @@ trait IncludesData
         return [];
     }
 
-    private function parseInclude($include): array
+    protected function parseInclude($include): array
     {
         $tree = [];
 
@@ -58,7 +58,7 @@ trait IncludesData
         return $tree;
     }
 
-    private function validateInclude(
+    protected function validateInclude(
         Context $context,
         array $resources,
         array $include,
