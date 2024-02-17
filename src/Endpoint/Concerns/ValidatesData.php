@@ -19,6 +19,8 @@ trait ValidatesData
      */
     protected function assertDataValid(Context $context, array $data): void
     {
+        $this->mutateDataBeforeValidation($context, $data);
+
         $collection = $context->collection;
 
         $rules = [
@@ -75,5 +77,14 @@ trait ValidatesData
 
             throw new UnprocessableEntityException($errors);
         }
+    }
+
+    protected function mutateDataBeforeValidation(Context $context, array $data): array
+    {
+        if (method_exists($context->resource, 'mutateDataBeforeValidation')) {
+            return $context->resource->mutateDataBeforeValidation($context, $data);
+        }
+
+        return $data;
     }
 }
