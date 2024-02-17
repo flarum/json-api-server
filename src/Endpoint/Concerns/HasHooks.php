@@ -7,34 +7,34 @@ use Tobyz\JsonApiServer\Context;
 
 trait HasHooks
 {
-    protected ?Closure $before = null;
-    protected ?Closure $after = null;
+    protected array $before = [];
+    protected array $after = [];
 
     public function before(Closure $callback): static
     {
-        $this->before = $callback;
+        $this->before[] = $callback;
 
         return $this;
     }
 
     public function after(Closure $callback): static
     {
-        $this->after = $callback;
+        $this->after[] = $callback;
 
         return $this;
     }
 
     protected function callBeforeHook(Context $context): void
     {
-        if ($this->before) {
-            ($this->before)($context);
+        foreach ($this->before as $before) {
+            $before($context);
         }
     }
 
     protected function callAfterHook(Context $context, mixed $data): mixed
     {
-        if ($this->after) {
-            return ($this->after)($context, $data);
+        foreach ($this->after as $after) {
+            $data = $after($context, $data);
         }
 
         return $data;
