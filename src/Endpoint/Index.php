@@ -6,6 +6,7 @@ use Closure;
 use Psr\Http\Message\ResponseInterface as Response;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
+use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\IncludesData;
 use Tobyz\JsonApiServer\Exception\BadRequestException;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
@@ -27,6 +28,7 @@ class Index implements Endpoint
     use HasMeta;
     use HasVisibility;
     use IncludesData;
+    use HasHooks;
 
     public Closure $paginationResolver;
     public ?string $defaultSort = null;
@@ -81,6 +83,8 @@ class Index implements Endpoint
             throw new ForbiddenException();
         }
 
+        $this->callBeforeHook($context);
+
         $query = $collection->query($context);
 
         $context = $context->withQuery($query);
@@ -103,6 +107,8 @@ class Index implements Endpoint
         }
 
         $models = $collection->results($query, $context);
+
+        ['models' => $models] = $this->callAfterHook($context, compact('models'));
 
         $serializer = new Serializer($context);
 

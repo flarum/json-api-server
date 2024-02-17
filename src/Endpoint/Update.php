@@ -6,6 +6,7 @@ use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
+use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\SavesData;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ValidatesData;
@@ -23,6 +24,7 @@ class Update implements Endpoint
     use SavesData;
     use ShowsResources;
     use ValidatesData;
+    use HasHooks;
 
     public static function make(): static
     {
@@ -57,6 +59,8 @@ class Update implements Endpoint
             throw new ForbiddenException();
         }
 
+        $this->callBeforeHook($context);
+
         $data = $this->parseData($context);
 
         $this->assertFieldsValid($context, $data);
@@ -67,6 +71,8 @@ class Update implements Endpoint
         $context = $context->withModel($model = $resource->update($model, $context));
 
         $this->saveFields($context, $data);
+
+        $model = $this->callAfterHook($context, $model);
 
         return json_api_response($this->showResource($context, $model));
     }

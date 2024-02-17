@@ -5,6 +5,7 @@ namespace Tobyz\JsonApiServer\Endpoint;
 use Psr\Http\Message\ResponseInterface;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
+use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
 use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
@@ -17,6 +18,7 @@ class Show implements Endpoint
     use HasVisibility;
     use FindsResources;
     use ShowsResources;
+    use HasHooks;
 
     public static function make(): static
     {
@@ -35,11 +37,15 @@ class Show implements Endpoint
             throw new MethodNotAllowedException();
         }
 
+        $this->callBeforeHook($context);
+
         $model = $this->findResource($context, $segments[1]);
 
         if (!$this->isVisible($context = $context->withModel($model))) {
             throw new ForbiddenException();
         }
+
+        $model = $this->callAfterHook($context, $model);
 
         return json_api_response($this->showResource($context, $model));
     }

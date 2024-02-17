@@ -5,6 +5,7 @@ namespace Tobyz\JsonApiServer\Endpoint;
 use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
+use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\SavesData;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ValidatesData;
@@ -23,6 +24,7 @@ class Create implements Endpoint
     use SavesData;
     use ShowsResources;
     use ValidatesData;
+    use HasHooks;
 
     public static function make(): static
     {
@@ -51,6 +53,8 @@ class Create implements Endpoint
             throw new ForbiddenException();
         }
 
+        $this->callBeforeHook($context);
+
         $data = $this->parseData($context);
 
         $context = $context
@@ -66,6 +70,8 @@ class Create implements Endpoint
         $context = $context->withModel($model = $resource->create($model, $context));
 
         $this->saveFields($context, $data);
+
+        $model = $this->callAfterHook($context, $model);
 
         return json_api_response($document = $this->showResource($context, $model))
             ->withStatus(201)
