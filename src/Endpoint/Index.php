@@ -138,7 +138,7 @@ class Index implements Endpoint
             return;
         }
 
-        $sorts = $context->collection->sorts();
+        $sorts = $context->collection->resolveSorts();
 
         foreach (parse_sort_string($sortString) as [$name, $direction]) {
             foreach ($sorts as $field) {

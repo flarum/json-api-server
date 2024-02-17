@@ -21,6 +21,11 @@ interface Resource
     public function fields(): array;
 
     /**
+     * Resolve the fields for this resource.
+     */
+    public function resolveFields(): array;
+
+    /**
      * Get the meta attributes for this resource.
      *
      * @return Attribute[]

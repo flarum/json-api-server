@@ -31,4 +31,9 @@ interface Listable
      * @return Sort[]
      */
     public function sorts(): array;
+
+    /**
+     * Resolve the sorts for this resource.
+     */
+    public function resolveSorts(): array;
 }
