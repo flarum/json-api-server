@@ -10,13 +10,14 @@ use Tobyz\JsonApiServer\Resource\Updatable;
 
 trait SetsValue
 {
+    use HasValidationRules;
+
     public ?Closure $writable = null;
     public bool $required = false;
     public ?Closure $default = null;
     public ?Closure $deserializer = null;
     public ?Closure $setter = null;
     public ?Closure $saver = null;
-    public array $validators = [];
 
     /**
      * Allow this field to be written to.
@@ -68,16 +69,6 @@ trait SetsValue
     public function deserialize(?Closure $deserializer): static
     {
         $this->deserializer = $deserializer;
-
-        return $this;
-    }
-
-    /**
-     * Add a validator to the field.
-     */
-    public function validate(Closure $validator): static
-    {
-        $this->validators[] = $validator;
 
         return $this;
     }

@@ -8,6 +8,7 @@ use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\SavesData;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
+use Tobyz\JsonApiServer\Endpoint\Concerns\ValidatesData;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
 use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
 use Tobyz\JsonApiServer\Resource\Updatable;
@@ -21,6 +22,7 @@ class Update implements Endpoint
     use FindsResources;
     use SavesData;
     use ShowsResources;
+    use ValidatesData;
 
     public static function make(): static
     {
@@ -59,7 +61,7 @@ class Update implements Endpoint
 
         $this->assertFieldsValid($context, $data);
         $this->deserializeValues($context, $data);
-        $this->assertDataValid($context, $data, false);
+        $this->assertDataValid($context, $data);
         $this->setValues($context, $data);
 
         $context = $context->withModel($model = $resource->update($model, $context));

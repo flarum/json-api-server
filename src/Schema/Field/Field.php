@@ -4,6 +4,7 @@ namespace Tobyz\JsonApiServer\Schema\Field;
 
 use Tobyz\JsonApiServer\Schema\Concerns\GetsValue;
 use Tobyz\JsonApiServer\Schema\Concerns\HasProperty;
+use Tobyz\JsonApiServer\Schema\Concerns\HasValidationRules;
 use Tobyz\JsonApiServer\Schema\Concerns\HasVisibility;
 use Tobyz\JsonApiServer\Schema\Concerns\SetsValue;
 
@@ -31,7 +32,7 @@ abstract class Field
     {
         $this->nullable = $nullable;
 
-        return $this;
+        return $this->rule('nullable');
     }
 
     public function description(?string $description): static

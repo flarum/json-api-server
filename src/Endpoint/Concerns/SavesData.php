@@ -155,41 +155,6 @@ trait SavesData
     }
 
     /**
-     * Assert that the field values within a data object pass validation.
-     *
-     * @throws UnprocessableEntityException if any fields do not pass validation.
-     */
-    private function assertDataValid(Context $context, array $data, bool $validateAll): void
-    {
-        $errors = [];
-
-        foreach ($context->fields($context->resource) as $field) {
-            $empty = !has_value($data, $field);
-
-            if ($empty && (!$field->required || !$validateAll)) {
-                continue;
-            }
-
-            $fail = function ($detail = null) use (&$errors, $field) {
-                $errors[] = [
-                    'source' => ['pointer' => '/data/' . location($field) . '/' . $field->name],
-                    'detail' => $detail,
-                ];
-            };
-
-            if ($empty && $field->required) {
-                $fail('field is required');
-            } else {
-                $field->validateValue(get_value($data, $field), $fail, $context->withField($field));
-            }
-        }
-
-        if (count($errors)) {
-            throw new UnprocessableEntityException($errors);
-        }
-    }
-
-    /**
      * Set field values from a data object to the model instance.
      */
     private function setValues(Context $context, array $data): void

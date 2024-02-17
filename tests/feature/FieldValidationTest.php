@@ -28,7 +28,7 @@ class FieldValidationTest extends AbstractTestCase
                 fields: [
                     Attribute::make('name')
                         ->writable()
-                        ->validate(fn($value, $fail) => $fail()),
+                        ->rule(fn () => fn($attribute, $value, $fail) => $fail("The $attribute is invalid.")),
                 ],
             ),
         );
@@ -52,7 +52,7 @@ class FieldValidationTest extends AbstractTestCase
                 fields: [
                     Attribute::make('name')
                         ->writable()
-                        ->validate(fn($value, $fail) => $fail()),
+                        ->rule(fn () => fn($attribute, $value, $fail) => $fail("The $attribute is invalid.")),
                 ],
             ),
         );

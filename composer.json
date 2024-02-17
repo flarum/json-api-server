@@ -6,6 +6,7 @@
         "ext-json": "*",
         "asispts/http-accept": "^1.0",
         "doctrine/inflector": "^2.0",
+        "illuminate/validation": ">=9.0",
         "nyholm/psr7": "^1.8",
         "psr/http-message": "^1.0",
         "psr/http-server-handler": "^1.0"

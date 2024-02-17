@@ -7,6 +7,7 @@ use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\SavesData;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
+use Tobyz\JsonApiServer\Endpoint\Concerns\ValidatesData;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
 use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
 use Tobyz\JsonApiServer\Resource\Creatable;
@@ -21,6 +22,7 @@ class Create implements Endpoint
     use HasVisibility;
     use SavesData;
     use ShowsResources;
+    use ValidatesData;
 
     public static function make(): static
     {
@@ -58,7 +60,7 @@ class Create implements Endpoint
         $this->assertFieldsValid($context, $data);
         $this->fillDefaultValues($context, $data);
         $this->deserializeValues($context, $data);
-        $this->assertDataValid($context, $data, true);
+        $this->assertDataValid($context, $data);
         $this->setValues($context, $data);
 
         $context = $context->withModel($model = $resource->create($model, $context));
