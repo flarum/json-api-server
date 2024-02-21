@@ -16,7 +16,7 @@ interface Listable
     /**
      * Get results from the given query.
      */
-    public function results(object $query, Context $context): array;
+    public function results(object $query, Context $context): iterable;
 
     /**
      * Filters that can be applied to the resource list.

@@ -85,7 +85,7 @@ class MockResource extends AbstractResource implements
         $query->models = array_slice($query->models, $pagination->offset, $pagination->limit);
     }
 
-    public function results(object $query, Context $context): array
+    public function results(object $query, Context $context): iterable
     {
         $args = array_merge(
             ...array_map(

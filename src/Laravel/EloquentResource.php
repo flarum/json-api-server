@@ -126,7 +126,7 @@ abstract class EloquentResource extends AbstractResource implements
     {
     }
 
-    public function results(object $query, Context $context): array
+    public function results(object $query, Context $context): iterable
     {
         return $query->get()->all();
     }

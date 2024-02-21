@@ -74,7 +74,7 @@ abstract class EloquentCollection implements Collection, Listable, Paginatable, 
     {
     }
 
-    public function results(object $query, Context $context): array
+    public function results(object $query, Context $context): iterable
     {
         $results = $query->get();
         $types = $results->groupBy('type');
@@ -85,7 +85,7 @@ abstract class EloquentCollection implements Collection, Listable, Paginatable, 
             $types[$type] = $model::findMany($rows->pluck('id'));
         }
 
-        return $results->map(fn($row) => $types[$row->type]->find($row->id))->all();
+        return $results->map(fn($row) => $types[$row->type]->find($row->id));
     }
 
     public function filters(): array
