@@ -108,7 +108,7 @@ class Index implements Endpoint
 
         $models = $collection->results($query, $context);
 
-        ['models' => $models] = $this->callAfterHook($context, compact('models'));
+        $models = $this->callAfterHook($context, $models);
 
         $serializer = new Serializer($context);
 
