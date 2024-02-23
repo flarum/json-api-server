@@ -5,6 +5,7 @@ namespace Tobyz\JsonApiServer\Schema\Concerns;
 use Closure;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Create;
+use Tobyz\JsonApiServer\Endpoint\Update;
 use Tobyz\JsonApiServer\Resource\Creatable;
 use Tobyz\JsonApiServer\Resource\Updatable;
 
@@ -35,6 +36,16 @@ trait SetsValue
     public function writableOnCreate(): static
     {
         $this->writable = fn($model, Context $context) => $context->endpoint instanceof Create;
+
+        return $this;
+    }
+
+    /**
+     * Allow this field to be written to when updating a model.
+     */
+    public function writableOnUpdate(): static
+    {
+        $this->writable = fn($model, Context $context) => $context->endpoint instanceof Update;
 
         return $this;
     }
