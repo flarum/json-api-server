@@ -90,14 +90,19 @@ trait HasValidationRules
         return $this->validationAttributes;
     }
 
+    public function required(bool|callable $condition = true): static
+    {
+        return $this->rule('required', $condition);
+    }
+
     public function requiredOnCreate(): static
     {
-        return $this->rule('required', fn ($model, Context $context) => $context->endpoint instanceof Create);
+        return $this->required(fn ($model, Context $context) => $context->endpoint instanceof Create);
     }
 
     public function requiredOnUpdate(): static
     {
-        return $this->rule('required', fn ($model, Context $context) => !$context->endpoint instanceof Update);
+        return $this->required(fn ($model, Context $context) => !$context->endpoint instanceof Update);
     }
 
     public function requiredWith(array $fields, bool|callable $condition): static

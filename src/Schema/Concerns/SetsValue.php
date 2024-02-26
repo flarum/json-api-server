@@ -14,7 +14,6 @@ trait SetsValue
     use HasValidationRules;
 
     public ?Closure $writable = null;
-    public bool $required = false;
     public ?Closure $default = null;
     public ?Closure $deserializer = null;
     public ?Closure $setter = null;
@@ -46,16 +45,6 @@ trait SetsValue
     public function writableOnUpdate(): static
     {
         $this->writable = fn($model, Context $context) => $context->endpoint instanceof Update;
-
-        return $this;
-    }
-
-    /**
-     * Mark this field as required.
-     */
-    public function required(bool $required = true): static
-    {
-        $this->required = $required;
 
         return $this;
     }
