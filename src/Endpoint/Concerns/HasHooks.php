@@ -2,7 +2,7 @@
 
 namespace Tobyz\JsonApiServer\Endpoint\Concerns;
 
-use Closure;
+use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 
 trait HasHooks
@@ -46,6 +46,10 @@ trait HasHooks
         foreach ($this->after as $after) {
             $after = $this->resolveCallable($after, $context);
             $data = $after($context, $data);
+
+            if (empty($data)) {
+                throw new RuntimeException('The after hook must return the data back.');
+            }
         }
 
         return $data;
