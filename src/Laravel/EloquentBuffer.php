@@ -75,12 +75,6 @@ abstract class EloquentBuffer
                     $constrain[$modelClass] = function (Builder $query) use ($resource, $context, $relationship, $relation, $aggregate) {
                         $resource->scope($query, $context);
 
-                        // Limiting relationship results is only possible on Laravel 11 or later,
-                        // or if the model uses the \Staudenmeir\EloquentEagerLimit\HasEagerLimit trait.
-                        if (! $aggregate && $relationship instanceof ToMany && method_exists($relation, 'limit') && ! empty($relationship->limit)) {
-                            $relation->limit($relationship->limit);
-                        }
-
                         if ($aggregate && ! empty($aggregate['constrain'])) {
                             ($aggregate['constrain'])($query, $context);
                         }
