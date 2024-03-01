@@ -2,6 +2,7 @@
 
 namespace Tobyz\JsonApiServer\Schema\Field;
 
+use Closure;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Exception\BadRequestException;
 use Tobyz\JsonApiServer\Exception\Sourceable;
@@ -9,6 +10,7 @@ use Tobyz\JsonApiServer\Exception\Sourceable;
 class ToMany extends Relationship
 {
     public ?int $limit = null;
+    public ?Closure $constrain = null;
 
     public function __construct(string $name)
     {
@@ -20,6 +22,13 @@ class ToMany extends Relationship
     public function limit(?int $limit): static
     {
         $this->limit = $limit;
+
+        return $this;
+    }
+
+    public function constrain(?Closure $constrain): static
+    {
+        $this->constrain = $constrain;
 
         return $this;
     }

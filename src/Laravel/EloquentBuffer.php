@@ -30,7 +30,7 @@ abstract class EloquentBuffer
     }
 
     /**
-     * @param array{relation: string, column: string, function: string}|null $aggregate
+     * @param array{relation: string, column: string, function: string, constrain: Closure}|null $aggregate
      */
     public static function load(
         Model $model,
@@ -79,6 +79,14 @@ abstract class EloquentBuffer
                         // or if the model uses the \Staudenmeir\EloquentEagerLimit\HasEagerLimit trait.
                         if (! $aggregate && $relationship instanceof ToMany && method_exists($relation, 'limit') && ! empty($relationship->limit)) {
                             $relation->limit($relationship->limit);
+                        }
+
+                        if ($aggregate && ! empty($aggregate['constrain'])) {
+                            ($aggregate['constrain'])($query, $context);
+                        }
+
+                        if ($relationship instanceof ToMany && $relationship->constrain) {
+                            ($relationship->constrain)($query, $context);
                         }
                     };
                 }
