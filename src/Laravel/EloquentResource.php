@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Pagination\OffsetPagination;
 use Tobyz\JsonApiServer\Resource\AbstractResource;
@@ -19,11 +20,13 @@ use Tobyz\JsonApiServer\Resource\Findable;
 use Tobyz\JsonApiServer\Resource\Listable;
 use Tobyz\JsonApiServer\Resource\Paginatable;
 use Tobyz\JsonApiServer\Resource\Updatable;
+use Tobyz\JsonApiServer\Schema\Contracts\RelationAggregator;
 use Tobyz\JsonApiServer\Schema\Field\Attribute;
 use Tobyz\JsonApiServer\Schema\Field\Field;
 use Tobyz\JsonApiServer\Schema\Field\Relationship;
 use Tobyz\JsonApiServer\Schema\Field\ToMany;
 use Tobyz\JsonApiServer\Schema\Type\DateTime;
+use Tobyz\JsonApiServer\Schema\Type\Number;
 
 abstract class EloquentResource extends AbstractResource implements
     Findable,
@@ -61,6 +64,28 @@ abstract class EloquentResource extends AbstractResource implements
 
     protected function getAttributeValue(Model $model, Field $field, Context $context)
     {
+        if ($field instanceof RelationAggregator && ($aggregate = $field->getRelationAggregate())) {
+            $relationName = $aggregate['relation'];
+
+            if (! $model->isRelation($relationName)) {
+                return $model->getAttribute($this->property($field));
+            }
+
+            $relationship = collect($context->fields($this))->first(fn ($f) => $f->name === $relationName);
+
+            if (! $relationship) {
+                throw new InvalidArgumentException("To use relation aggregates, the relationship field must be part of the resource. Missing field: $relationName for attribute $field->name.");
+            }
+
+            EloquentBuffer::add($model, $relationName, $aggregate);
+
+            return function () use ($model, $relationName, $relationship, $field, $context, $aggregate) {
+                EloquentBuffer::load($model, $relationName, $relationship, $context, $aggregate);
+
+                return $model->getAttribute($this->property($field));
+            };
+        }
+
         return $model->getAttribute($this->property($field));
     }
 
