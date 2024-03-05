@@ -24,6 +24,7 @@ class Endpoint
 
     protected ?Closure $action = null;
     protected ?Closure $response = null;
+    protected array $beforeSerialization = [];
 
     public function __construct(
         public string $name
@@ -72,6 +73,13 @@ class Endpoint
         return $this;
     }
 
+    public function beforeSerialization(Closure $callback): static
+    {
+        $this->beforeSerialization[] = $callback;
+
+        return $this;
+    }
+
     public function process(Context $context): mixed
     {
         if (! $this->action) {
@@ -106,6 +114,10 @@ class Endpoint
         }
 
         $data = $this->process($context);
+
+        foreach ($this->beforeSerialization as $callback) {
+            $callback($context, $data);
+        }
 
         if ($this->response) {
             return ($this->response)($context, $data);
