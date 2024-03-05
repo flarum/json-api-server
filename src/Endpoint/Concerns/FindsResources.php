@@ -14,7 +14,7 @@ trait FindsResources
      *
      * @throws ResourceNotFoundException if the resource is not found.
      */
-    protected function findResource(Context $context, string $id)
+    protected function findResource(Context $context, ?string $id)
     {
         $collection = $context->collection;
 

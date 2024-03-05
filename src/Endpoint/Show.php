@@ -2,51 +2,25 @@
 
 namespace Tobyz\JsonApiServer\Endpoint;
 
-use Psr\Http\Message\ResponseInterface;
 use Tobyz\JsonApiServer\Context;
-use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
-use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
-use Tobyz\JsonApiServer\Exception\ForbiddenException;
-use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
-use Tobyz\JsonApiServer\Schema\Concerns\HasVisibility;
 
-use function Tobyz\JsonApiServer\json_api_response;
-
-class Show implements Endpoint
+class Show extends Endpoint
 {
-    use HasVisibility;
-    use FindsResources;
-    use ShowsResources;
     use HasHooks;
 
-    public static function make(): static
+    public static function make(?string $name = null): static
     {
-        return new static();
+        return parent::make($name ?? 'show');
     }
 
-    public function handle(Context $context): ?ResponseInterface
+    public function setUp(): void
     {
-        $segments = explode('/', $context->path());
+        $this->route('GET', '/{id}')
+            ->action(function (Context $context): object {
+                $this->callBeforeHook($context);
 
-        if (count($segments) !== 2) {
-            return null;
-        }
-
-        if ($context->request->getMethod() !== 'GET') {
-            throw new MethodNotAllowedException();
-        }
-
-        $this->callBeforeHook($context);
-
-        $model = $this->findResource($context, $segments[1]);
-
-        if (!$this->isVisible($context = $context->withModel($model))) {
-            throw new ForbiddenException();
-        }
-
-        $model = $this->callAfterHook($context, $model);
-
-        return json_api_response($this->showResource($context, $model));
+                return $this->callAfterHook($context, $context->model);
+            });
     }
 }

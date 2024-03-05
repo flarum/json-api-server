@@ -2,80 +2,69 @@
 
 namespace Tobyz\JsonApiServer\Endpoint;
 
-use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\SavesData;
-use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ValidatesData;
-use Tobyz\JsonApiServer\Exception\ForbiddenException;
-use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
 use Tobyz\JsonApiServer\Resource\Creatable;
-use Tobyz\JsonApiServer\Schema\Concerns\HasVisibility;
 
 use function Tobyz\JsonApiServer\has_value;
 use function Tobyz\JsonApiServer\json_api_response;
 use function Tobyz\JsonApiServer\set_value;
 
-class Create implements Endpoint
+class Create extends Endpoint
 {
-    use HasVisibility;
     use SavesData;
-    use ShowsResources;
     use ValidatesData;
     use HasHooks;
 
-    public static function make(): static
+    public static function make(?string $name = null): static
     {
-        return new static();
+        return parent::make($name ?? 'create');
     }
 
-    public function handle(Context $context): ?ResponseInterface
+    public function setUp(): void
     {
-        if (str_contains($context->path(), '/')) {
-            return null;
-        }
+        $this->route('POST', '/')
+            ->action(function (Context $context): ?object {
+                if (str_contains($context->path(), '/')) {
+                    return null;
+                }
 
-        if ($context->request->getMethod() !== 'POST') {
-            throw new MethodNotAllowedException();
-        }
+                $collection = $context->collection;
 
-        $collection = $context->collection;
+                if (!$collection instanceof Creatable) {
+                    throw new RuntimeException(
+                        sprintf('%s must implement %s', get_class($collection), Creatable::class),
+                    );
+                }
 
-        if (!$collection instanceof Creatable) {
-            throw new RuntimeException(
-                sprintf('%s must implement %s', get_class($collection), Creatable::class),
-            );
-        }
+                $this->callBeforeHook($context);
 
-        if (!$this->isVisible($context)) {
-            throw new ForbiddenException();
-        }
+                $data = $this->parseData($context);
 
-        $this->callBeforeHook($context);
+                $context = $context
+                    ->withResource($resource = $context->resource($data['type']))
+                    ->withModel($model = $collection->newModel($context));
 
-        $data = $this->parseData($context);
+                $this->assertFieldsValid($context, $data);
+                $this->fillDefaultValues($context, $data);
+                $this->deserializeValues($context, $data);
+                $this->assertDataValid($context, $data);
+                $this->setValues($context, $data);
 
-        $context = $context
-            ->withResource($resource = $context->resource($data['type']))
-            ->withModel($model = $collection->newModel($context));
+                $context = $context->withModel($model = $resource->createAction($model, $context));
 
-        $this->assertFieldsValid($context, $data);
-        $this->fillDefaultValues($context, $data);
-        $this->deserializeValues($context, $data);
-        $this->assertDataValid($context, $data);
-        $this->setValues($context, $data);
+                $this->saveFields($context, $data);
 
-        $context = $context->withModel($model = $resource->create($model, $context));
-
-        $this->saveFields($context, $data);
-
-        $model = $this->callAfterHook($context, $model);
-
-        return json_api_response($document = $this->showResource($context, $model))
-            ->withStatus(201)
-            ->withHeader('Location', $document['data']['links']['self']);
+                return $this->callAfterHook($context, $model);
+            })
+            ->response(function (Context $context, object $model) {
+                return json_api_response($document = $this->showResource($context, $model))
+                    ->withStatus(201)
+                    ->withHeader('Location', $document['data']['links']['self']);
+            });
     }
 
     final protected function fillDefaultValues(Context $context, array &$data): void

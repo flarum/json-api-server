@@ -2,78 +2,54 @@
 
 namespace Tobyz\JsonApiServer\Endpoint;
 
-use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
-use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\SavesData;
-use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ValidatesData;
-use Tobyz\JsonApiServer\Exception\ForbiddenException;
-use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
 use Tobyz\JsonApiServer\Resource\Updatable;
-use Tobyz\JsonApiServer\Schema\Concerns\HasVisibility;
 
-use function Tobyz\JsonApiServer\json_api_response;
-
-class Update implements Endpoint
+class Update extends Endpoint
 {
-    use HasVisibility;
-    use FindsResources;
     use SavesData;
-    use ShowsResources;
     use ValidatesData;
     use HasHooks;
 
-    public static function make(): static
+    public static function make(?string $name = null): static
     {
-        return new static();
+        return parent::make($name ?? 'update');
     }
 
-    public function handle(Context $context): ?ResponseInterface
+    public function setUp(): void
     {
-        $segments = explode('/', $context->path());
+        $this->route('PATCH', '/{id}')
+            ->action(function (Context $context): object {
+                $model = $context->model;
 
-        if (count($segments) !== 2) {
-            return null;
-        }
+                $context = $context->withResource(
+                    $resource = $context->resource($context->collection->resource($model, $context)),
+                );
 
-        if ($context->request->getMethod() !== 'PATCH') {
-            throw new MethodNotAllowedException();
-        }
+                if (!$resource instanceof Updatable) {
+                    throw new RuntimeException(
+                        sprintf('%s must implement %s', get_class($resource), Updatable::class),
+                    );
+                }
 
-        $model = $this->findResource($context, $segments[1]);
+                $this->callBeforeHook($context);
 
-        $context = $context->withResource(
-            $resource = $context->resource($context->collection->resource($model, $context)),
-        );
+                $data = $this->parseData($context);
 
-        if (!$resource instanceof Updatable) {
-            throw new RuntimeException(
-                sprintf('%s must implement %s', get_class($resource), Updatable::class),
-            );
-        }
+                $this->assertFieldsValid($context, $data);
+                $this->deserializeValues($context, $data);
+                $this->assertDataValid($context, $data);
+                $this->setValues($context, $data);
 
-        if (!$this->isVisible($context = $context->withModel($model))) {
-            throw new ForbiddenException();
-        }
+                $context = $context->withModel($model = $resource->updateAction($model, $context));
 
-        $this->callBeforeHook($context);
+                $this->saveFields($context, $data);
 
-        $data = $this->parseData($context);
-
-        $this->assertFieldsValid($context, $data);
-        $this->deserializeValues($context, $data);
-        $this->assertDataValid($context, $data);
-        $this->setValues($context, $data);
-
-        $context = $context->withModel($model = $resource->update($model, $context));
-
-        $this->saveFields($context, $data);
-
-        $model = $this->callAfterHook($context, $model);
-
-        return json_api_response($this->showResource($context, $model));
+                return $this->callAfterHook($context, $model);
+            });
     }
 }

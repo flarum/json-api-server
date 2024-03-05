@@ -71,4 +71,9 @@ abstract class AbstractResource implements Resource, Collection
     {
         return $model->{$field->property ?: $field->name} ?? null;
     }
+
+    public function id(Context $context): ?string
+    {
+        return $context->extractIdFromPath($context);
+    }
 }

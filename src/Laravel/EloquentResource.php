@@ -168,6 +168,10 @@ abstract class EloquentResource extends AbstractResource implements
 
     public function find(string $id, Context $context): ?object
     {
+        if ($id === null) {
+            return null;
+        }
+
         return $this->query($context)->find($id);
     }
 
@@ -215,7 +219,7 @@ abstract class EloquentResource extends AbstractResource implements
         }
     }
 
-    public function create(object $model, Context $context): object
+    public function createAction(object $model, Context $context): object
     {
         if (method_exists($this, 'creating')) {
             $model = $this->creating($model, $context) ?: $model;
@@ -225,7 +229,7 @@ abstract class EloquentResource extends AbstractResource implements
             $model = $this->saving($model, $context) ?: $model;
         }
 
-        $this->saveModel($model, $context);
+        $model = $this->create($model, $context);
 
         if (method_exists($this, 'saved')) {
             $model = $this->saved($model, $context) ?: $model;
@@ -238,7 +242,14 @@ abstract class EloquentResource extends AbstractResource implements
         return $model;
     }
 
-    public function update(object $model, Context $context): object
+    public function create(object $model, Context $context): object
+    {
+        $this->saveModel($model, $context);
+
+        return $model;
+    }
+
+    public function updateAction(object $model, Context $context): object
     {
         if (method_exists($this, 'updating')) {
             $model = $this->updating($model, $context) ?: $model;
@@ -248,7 +259,7 @@ abstract class EloquentResource extends AbstractResource implements
             $model = $this->saving($model, $context) ?: $model;
         }
 
-        $this->saveModel($model, $context);
+        $this->update($model, $context);
 
         if (method_exists($this, 'saved')) {
             $model = $this->saved($model, $context) ?: $model;
@@ -261,9 +272,29 @@ abstract class EloquentResource extends AbstractResource implements
         return $model;
     }
 
+    public function update(object $model, Context $context): object
+    {
+        $this->saveModel($model, $context);
+
+        return $model;
+    }
+
     protected function saveModel(Model $model, Context $context): void
     {
         $model->save();
+    }
+
+    public function deleteAction(object $model, Context $context): void
+    {
+        if (method_exists($this, 'deleting')) {
+            $this->deleting($model, $context);
+        }
+
+        $this->delete($model, $context);
+
+        if (method_exists($this, 'deleted')) {
+            $this->deleted($model, $context);
+        }
     }
 
     public function delete(object $model, Context $context): void

@@ -91,4 +91,19 @@ class MockCollection implements Collection, Listable, Paginatable
     {
         return count($query->models);
     }
+
+    public function resolveEndpoints(): array
+    {
+        return $this->endpoints();
+    }
+
+    public function resolveSorts(): array
+    {
+        return $this->sorts();
+    }
+
+    public function id(Context $context): ?string
+    {
+        return $context->extractIdFromPath($context);
+    }
 }

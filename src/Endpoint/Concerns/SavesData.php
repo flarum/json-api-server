@@ -7,7 +7,6 @@ use Tobyz\JsonApiServer\Exception\BadRequestException;
 use Tobyz\JsonApiServer\Exception\ConflictException;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
 use Tobyz\JsonApiServer\Exception\Sourceable;
-use Tobyz\JsonApiServer\Exception\UnprocessableEntityException;
 
 use function Tobyz\JsonApiServer\get_value;
 use function Tobyz\JsonApiServer\has_value;
@@ -16,8 +15,6 @@ use function Tobyz\JsonApiServer\set_value;
 
 trait SavesData
 {
-    use FindsResources;
-
     /**
      * Parse and validate a JSON:API document's `data` member.
      *

@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\RequestHandlerInterface;
+use Tobyz\JsonApiServer\Endpoint\Endpoint;
 use Tobyz\JsonApiServer\Exception\BadRequestException;
 use Tobyz\JsonApiServer\Exception\ErrorProvider;
 use Tobyz\JsonApiServer\Exception\InternalServerErrorException;
@@ -134,6 +135,7 @@ class JsonApi implements RequestHandlerInterface
 
             $context = $context->withCollection($this->getCollection($segments[0]));
 
+            /** @var Endpoint $endpoint */
             foreach ($context->collection->resolveEndpoints() as $endpoint) {
                 try {
                     if ($response = $endpoint->handle($context->withEndpoint($endpoint))) {

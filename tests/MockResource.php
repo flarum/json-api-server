@@ -138,4 +138,19 @@ class MockResource extends AbstractResource implements
     {
         $this->models = array_filter($this->models, fn($m) => $m !== $model);
     }
+
+    public function createAction(object $model, Context $context): object
+    {
+        return $this->create($model, $context);
+    }
+
+    public function deleteAction(object $model, Context $context): void
+    {
+        $this->delete($model, $context);
+    }
+
+    public function updateAction(object $model, Context $context): object
+    {
+        return $this->update($model, $context);
+    }
 }

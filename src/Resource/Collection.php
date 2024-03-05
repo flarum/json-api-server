@@ -32,4 +32,9 @@ interface Collection
      * Resolve the endpoints for this collection.
      */
     public function resolveEndpoints(): array;
+
+    /**
+     * Get the model ID being handled by this collection.
+     */
+    public function id(Context $context): ?string;
 }

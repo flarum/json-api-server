@@ -10,37 +10,41 @@ use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Endpoint\Concerns\IncludesData;
 use Tobyz\JsonApiServer\Exception\BadRequestException;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
-use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
 use Tobyz\JsonApiServer\Exception\Sourceable;
 use Tobyz\JsonApiServer\Pagination\OffsetPagination;
 use Tobyz\JsonApiServer\Resource\Countable;
 use Tobyz\JsonApiServer\Resource\Listable;
 use Tobyz\JsonApiServer\Schema\Concerns\HasMeta;
-use Tobyz\JsonApiServer\Schema\Concerns\HasVisibility;
 use Tobyz\JsonApiServer\Serializer;
 
 use function Tobyz\JsonApiServer\apply_filters;
 use function Tobyz\JsonApiServer\json_api_response;
 use function Tobyz\JsonApiServer\parse_sort_string;
 
-class Index implements Endpoint
+class Index extends Endpoint
 {
     use HasMeta;
-    use HasVisibility;
     use IncludesData;
     use HasHooks;
 
     public Closure $paginationResolver;
     public ?string $defaultSort = null;
 
-    public function __construct()
+    public function __construct(string $name)
     {
+        parent::__construct($name);
+
         $this->paginationResolver = fn() => null;
     }
 
-    public static function make(): static
+    public static function make(?string $name = null): static
     {
-        return new static();
+        return parent::make($name ?? 'index');
+    }
+
+    protected function setUp(): void
+    {
+        $this->route('GET', '/');
     }
 
     public function paginate(int $defaultLimit = 20, int $maxLimit = 50): static
@@ -65,10 +69,6 @@ class Index implements Endpoint
     {
         if (str_contains($context->path(), '/')) {
             return null;
-        }
-
-        if ($context->request->getMethod() !== 'GET') {
-            throw new MethodNotAllowedException();
         }
 
         $collection = $context->collection;

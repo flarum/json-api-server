@@ -23,6 +23,11 @@ interface Creatable
     public function saveValue(object $model, Field $field, mixed $value, Context $context): void;
 
     /**
+     * Persist a new model instance to storage. With pre- and post-hooks.
+     */
+    public function createAction(object $model, Context $context): object;
+
+    /**
      * Persist a new model instance to storage.
      */
     public function create(object $model, Context $context): object;

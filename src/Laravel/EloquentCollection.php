@@ -107,4 +107,9 @@ abstract class EloquentCollection implements Collection, Listable, Paginatable, 
     {
         return $query->count();
     }
+
+    public function id(Context $context): ?string
+    {
+        return $context->extractIdFromPath($context);
+    }
 }

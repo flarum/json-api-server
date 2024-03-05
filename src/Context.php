@@ -8,6 +8,7 @@ use Tobyz\JsonApiServer\Resource\Collection;
 use Tobyz\JsonApiServer\Resource\Resource;
 use Tobyz\JsonApiServer\Schema\Field\Field;
 use WeakMap;
+use function Laravel\Prompts\error;
 
 class Context
 {
@@ -16,12 +17,13 @@ class Context
     public ?Endpoint $endpoint = null;
     public ?object $query = null;
     public ?Serializer $serializer = null;
+    public int|string|null $modelId = null;
     public mixed $model = null;
     public ?Field $field = null;
     public ?array $include = null;
 
     private ?array $body;
-    private string $path;
+    private ?string $path;
 
     private WeakMap $fields;
     private WeakMap $sparseFields;
@@ -192,6 +194,13 @@ class Context
         return $new;
     }
 
+    public function withModelId(int|string|null $id): static
+    {
+        $new = clone $this;
+        $new->modelId = $id;
+        return $new;
+    }
+
     public function withModel(mixed $model): static
     {
         $new = clone $this;
@@ -211,5 +220,21 @@ class Context
         $new = clone $this;
         $new->include = $include;
         return $new;
+    }
+
+    public function extractIdFromPath(Context $context): ?string
+    {
+        $currentPath = trim($context->path(), '/');
+        $path = trim($context->collection->name() . $this->endpoint->path, '/');
+
+        if (!str_contains($path, '{id}')) {
+            return null;
+        }
+
+        $segments = explode('/', $path);
+        $idSegmentIndex = array_search('{id}', $segments);
+        $currentPathSegments = explode('/', $currentPath);
+
+        return $currentPathSegments[$idSegmentIndex] ?? null;
     }
 }

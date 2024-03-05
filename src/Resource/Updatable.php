@@ -18,6 +18,11 @@ interface Updatable extends Findable
     public function saveValue(object $model, Field $field, mixed $value, Context $context): void;
 
     /**
+     * Persist an existing model instance to storage. With pre- and post-hooks.
+     */
+    public function updateAction(object $model, Context $context): object;
+
+    /**
      * Persist an existing model instance to storage.
      */
     public function update(object $model, Context $context): object;

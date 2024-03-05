@@ -3,63 +3,54 @@
 namespace Tobyz\JsonApiServer\Endpoint;
 
 use Nyholm\Psr7\Response;
-use Psr\Http\Message\ResponseInterface;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
-use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
-use Tobyz\JsonApiServer\Exception\ForbiddenException;
-use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
+use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
 use Tobyz\JsonApiServer\Resource\Deletable;
 use Tobyz\JsonApiServer\Schema\Concerns\HasMeta;
-use Tobyz\JsonApiServer\Schema\Concerns\HasVisibility;
 
 use function Tobyz\JsonApiServer\json_api_response;
 
-class Delete implements Endpoint
+class Delete extends Endpoint
 {
     use HasMeta;
-    use HasVisibility;
-    use FindsResources;
+    use HasHooks;
 
-    public static function make(): static
+    public static function make(?string $name = null): static
     {
-        return new static();
+        return parent::make($name ?? 'delete');
     }
 
-    public function handle(Context $context): ?ResponseInterface
+    public function setUp(): void
     {
-        $segments = explode('/', $context->path());
+        $this->route('DELETE', '/{id}')
+            ->action(function (Context $context) {
+                $model = $context->model;
 
-        if (count($segments) !== 2) {
-            return null;
-        }
+                $context = $context->withResource(
+                    $resource = $context->resource($context->collection->resource($model, $context)),
+                );
 
-        if ($context->request->getMethod() !== 'DELETE') {
-            throw new MethodNotAllowedException();
-        }
+                if (!$resource instanceof Deletable) {
+                    throw new RuntimeException(
+                        sprintf('%s must implement %s', get_class($resource), Deletable::class),
+                    );
+                }
 
-        $model = $this->findResource($context, $segments[1]);
+                $this->callBeforeHook($context);
 
-        $context = $context->withResource(
-            $resource = $context->resource($context->collection->resource($model, $context)),
-        );
+                $resource->deleteAction($model, $context);
 
-        if (!$resource instanceof Deletable) {
-            throw new RuntimeException(
-                sprintf('%s must implement %s', get_class($resource), Deletable::class),
-            );
-        }
+                $this->callAfterHook($context, $model);
 
-        if (!$this->isVisible($context = $context->withModel($model))) {
-            throw new ForbiddenException();
-        }
+                return null;
+            })
+            ->response(function (Context $context) {
+                if ($meta = $this->serializeMeta($context)) {
+                    return json_api_response(['meta' => $meta]);
+                }
 
-        $resource->delete($model, $context);
-
-        if ($meta = $this->serializeMeta($context)) {
-            return json_api_response(['meta' => $meta]);
-        }
-
-        return new Response(204);
+                return new Response(204);
+            });
     }
 }
