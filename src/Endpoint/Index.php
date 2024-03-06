@@ -44,7 +44,78 @@ class Index extends Endpoint
 
     protected function setUp(): void
     {
-        $this->route('GET', '/');
+        $this->route('GET', '/')
+            ->action(function (Context $context) {
+                if (str_contains($context->path(), '/')) {
+                    return null;
+                }
+
+                $collection = $context->collection;
+
+                if (!$collection instanceof Listable) {
+                    throw new RuntimeException(
+                        sprintf('%s must implement %s', get_class($collection), Listable::class),
+                    );
+                }
+
+                $this->callBeforeHook($context);
+
+                $query = $collection->query($context);
+
+                $context = $context->withQuery($query);
+
+                $this->applySorts($query, $context);
+                $this->applyFilters($query, $context);
+
+                $meta = $this->serializeMeta($context);
+
+                if (
+                    $collection instanceof Countable &&
+                    !is_null($total = $collection->count($query, $context))
+                ) {
+                    $meta['page']['total'] = $collection->count($query, $context);
+                }
+
+                if ($pagination = ($this->paginationResolver)($context)) {
+                    $pagination->apply($query);
+                }
+
+                $models = $collection->results($query, $context);
+
+                $models = $this->callAfterHook($context, $models);
+
+                $total ??= null;
+
+                return compact('models', 'meta', 'pagination', 'total');
+            })
+            ->response(function (Context $context, array $results): Response {
+                $collection = $context->collection;
+
+                ['models' => $models, 'meta' => $meta, 'pagination' => $pagination, 'total' => $total] = $results;
+
+                $serializer = new Serializer($context);
+
+                $include = $this->getInclude($context);
+
+                foreach ($models as $model) {
+                    $serializer->addPrimary(
+                        $context->resource($collection->resource($model, $context)),
+                        $model,
+                        $include,
+                    );
+                }
+
+                [$data, $included] = $serializer->serialize();
+
+                $links = [];
+
+                if ($pagination) {
+                    $meta['page'] = array_merge($meta['page'] ?? [], $pagination->meta());
+                    $links = array_merge($links, $pagination->links(count($data), $total));
+                }
+
+                return json_api_response(compact('data', 'included', 'meta', 'links'));
+            });
     }
 
     public function paginate(int $defaultLimit = 20, int $maxLimit = 50): static
@@ -63,73 +134,6 @@ class Index extends Endpoint
         $this->defaultSort = $defaultSort;
 
         return $this;
-    }
-
-    public function handle(Context $context): ?Response
-    {
-        if (str_contains($context->path(), '/')) {
-            return null;
-        }
-
-        $collection = $context->collection;
-
-        if (!$collection instanceof Listable) {
-            throw new RuntimeException(
-                sprintf('%s must implement %s', get_class($collection), Listable::class),
-            );
-        }
-
-        if (!$this->isVisible($context)) {
-            throw new ForbiddenException();
-        }
-
-        $this->callBeforeHook($context);
-
-        $query = $collection->query($context);
-
-        $context = $context->withQuery($query);
-
-        $this->applySorts($query, $context);
-        $this->applyFilters($query, $context);
-
-        $meta = $this->serializeMeta($context);
-        $links = [];
-
-        if (
-            $collection instanceof Countable &&
-            !is_null($total = $collection->count($query, $context))
-        ) {
-            $meta['page']['total'] = $collection->count($query, $context);
-        }
-
-        if ($pagination = ($this->paginationResolver)($context)) {
-            $pagination->apply($query);
-        }
-
-        $models = $collection->results($query, $context);
-
-        $models = $this->callAfterHook($context, $models);
-
-        $serializer = new Serializer($context);
-
-        $include = $this->getInclude($context);
-
-        foreach ($models as $model) {
-            $serializer->addPrimary(
-                $context->resource($collection->resource($model, $context)),
-                $model,
-                $include,
-            );
-        }
-
-        [$data, $included] = $serializer->serialize();
-
-        if ($pagination) {
-            $meta['page'] = array_merge($meta['page'] ?? [], $pagination->meta());
-            $links = array_merge($links, $pagination->links(count($data), $total ?? null));
-        }
-
-        return json_api_response(compact('data', 'included', 'meta', 'links'));
     }
 
     final protected function applySorts($query, Context $context): void
