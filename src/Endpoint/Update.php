@@ -2,6 +2,7 @@
 
 namespace Tobyz\JsonApiServer\Endpoint;
 
+use Illuminate\Database\Eloquent\Collection;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
@@ -50,6 +51,9 @@ class Update extends Endpoint
                 $this->saveFields($context, $data);
 
                 return $this->callAfterHook($context, $model);
+            })
+            ->beforeSerialization(function (Context $context, object $model) {
+                $this->loadRelations(Collection::make([$model]), $context, $this->getInclude($context));
             });
     }
 }

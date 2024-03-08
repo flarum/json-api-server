@@ -2,6 +2,7 @@
 
 namespace Tobyz\JsonApiServer\Endpoint;
 
+use Illuminate\Database\Eloquent\Collection;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\HasHooks;
@@ -59,6 +60,9 @@ class Create extends Endpoint
                 $this->saveFields($context, $data);
 
                 return $this->callAfterHook($context, $model);
+            })
+            ->beforeSerialization(function (Context $context, object $model) {
+                $this->loadRelations(Collection::make([$model]), $context, $this->getInclude($context));
             })
             ->response(function (Context $context, object $model) {
                 return json_api_response($document = $this->showResource($context, $model))

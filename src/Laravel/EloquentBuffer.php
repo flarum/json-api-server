@@ -3,12 +3,14 @@
 namespace Tobyz\JsonApiServer\Laravel;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Schema\Field\Relationship;
 use Tobyz\JsonApiServer\Schema\Field\ToMany;
+use Tobyz\JsonApiServer\Schema\Field\ToOne;
 
 abstract class EloquentBuffer
 {
@@ -73,6 +75,12 @@ abstract class EloquentBuffer
 
                 if ($resource instanceof EloquentResource && !isset($constrain[$modelClass])) {
                     $constrain[$modelClass] = function (Builder $query) use ($resource, $context, $relationship, $relation, $aggregate) {
+                        if (! $aggregate) {
+                            $query
+                                ->with($context->endpoint->getEagerLoadsFor($relationship->name, $context))
+                                ->with($context->endpoint->getWhereEagerLoadsFor($relationship->name, $context));
+                        }
+
                         $resource->scope($query, $context);
 
                         if ($aggregate && ! empty($aggregate['constrain'])) {
@@ -99,6 +107,22 @@ abstract class EloquentBuffer
 
         if (! $aggregate) {
             $collection->load([$relationName => $loader]);
+
+            // Set the inverse relation on the loaded relations.
+            $collection->each(function (Model $model) use ($relationName, $relationship) {
+                /** @var Model|Collection $related */
+                if ($related = $model->getRelation($relationName)) {
+                    $inverse = $relationship->inverse ?? str($model::class)->afterLast('\\')->camel()->toString();
+
+                    $related = $related instanceof Collection ? $related : [$related];
+
+                    foreach ($related as $rel) {
+                        if ($rel->isRelation($inverse)) {
+                            $rel->setRelation($inverse, $model);
+                        }
+                    }
+                }
+            });
         } else {
             $collection->loadAggregate([$relationName => $loader], $aggregate['column'], $aggregate['function']);
         }

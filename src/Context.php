@@ -21,6 +21,7 @@ class Context
     public mixed $model = null;
     public ?Field $field = null;
     public ?array $include = null;
+    public ?array $requestIncludes = null;
 
     private ?array $body;
     private ?string $path;
@@ -156,6 +157,7 @@ class Context
         $new->sparseFields = new WeakMap();
         $new->body = null;
         $new->path = null;
+        $this->requestIncludes = null;
         return $new;
     }
 
@@ -219,6 +221,13 @@ class Context
     {
         $new = clone $this;
         $new->include = $include;
+        return $new;
+    }
+
+    public function withRequestIncludes(array $requestIncludes): static
+    {
+        $new = clone $this;
+        $new->requestIncludes = $requestIncludes;
         return $new;
     }
 

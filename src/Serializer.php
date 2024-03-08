@@ -3,6 +3,7 @@
 namespace Tobyz\JsonApiServer;
 
 use Closure;
+use Illuminate\Support\Collection;
 use RuntimeException;
 use Tobyz\JsonApiServer\Resource\Resource;
 use Tobyz\JsonApiServer\Schema\Field\Relationship;
@@ -12,11 +13,12 @@ class Serializer
     private Context $context;
     private array $map = [];
     private array $primary = [];
-    private array $deferred = [];
+    private Collection $deferred;
 
     public function __construct(Context $context)
     {
         $this->context = $context->withSerializer($this);
+        $this->deferred = new Collection();
     }
 
     /**
@@ -83,7 +85,7 @@ class Serializer
                 ) {
                     set_value($this->map[$key], $field, $value);
                 }
-            });
+            }, $field instanceof Relationship);
         }
 
         // TODO: cache
@@ -107,10 +109,17 @@ class Serializer
         return "$type:$id";
     }
 
-    private function whenResolved($value, $callback): void
+    private function whenResolved($value, $callback, bool $prepend = false): void
     {
         if ($value instanceof Closure) {
-            $this->deferred[] = fn() => $this->whenResolved($value(), $callback);
+            $callable = fn() => $this->whenResolved($value(), $callback);
+
+            if ($prepend) {
+                $this->deferred->prepend($callable);
+            } else {
+                $this->deferred->push($callable);
+            }
+
             return;
         }
 
@@ -166,10 +175,10 @@ class Serializer
     private function resolveDeferred(): void
     {
         $i = 0;
-        while (count($this->deferred)) {
+        while ($this->deferred->count()) {
             foreach ($this->deferred as $k => $resolve) {
                 $resolve();
-                unset($this->deferred[$k]);
+                $this->deferred->forget($k);
             }
 
             if ($i++ > 10) {

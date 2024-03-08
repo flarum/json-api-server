@@ -3,6 +3,7 @@
 namespace Tobyz\JsonApiServer\Endpoint;
 
 use Closure;
+use Illuminate\Database\Eloquent\Collection;
 use Psr\Http\Message\ResponseInterface as Response;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
@@ -29,6 +30,7 @@ class Index extends Endpoint
 
     public Closure $paginationResolver;
     public ?string $defaultSort = null;
+    protected ?Closure $query = null;
 
     public function __construct(string $name)
     {
@@ -40,6 +42,13 @@ class Index extends Endpoint
     public static function make(?string $name = null): static
     {
         return parent::make($name ?? 'index');
+    }
+
+    public function query(?Closure $query): static
+    {
+        $this->query = $query;
+
+        return $this;
     }
 
     protected function setUp(): void
@@ -62,10 +71,24 @@ class Index extends Endpoint
 
                 $query = $collection->query($context);
 
-                $context = $context->withQuery($query);
+                $pagination = ($this->paginationResolver)($context);
 
-                $this->applySorts($query, $context);
-                $this->applyFilters($query, $context);
+                if ($this->query) {
+                    $context = ($this->query)($query, $pagination, $context);
+
+                    if (! $context instanceof Context) {
+                        throw new RuntimeException('The Index endpoint query closure must return a Context instance.');
+                    }
+                } else {
+                    $context = $context->withQuery($query);
+
+                    $this->applySorts($query, $context);
+                    $this->applyFilters($query, $context);
+
+                    if ($pagination) {
+                        $pagination->apply($query);
+                    }
+                }
 
                 $meta = $this->serializeMeta($context);
 
@@ -73,11 +96,7 @@ class Index extends Endpoint
                     $collection instanceof Countable &&
                     !is_null($total = $collection->count($query, $context))
                 ) {
-                    $meta['page']['total'] = $collection->count($query, $context);
-                }
-
-                if ($pagination = ($this->paginationResolver)($context)) {
-                    $pagination->apply($query);
+                    $meta['page']['total'] = $total;
                 }
 
                 $models = $collection->results($query, $context);
@@ -87,6 +106,9 @@ class Index extends Endpoint
                 $total ??= null;
 
                 return compact('models', 'meta', 'pagination', 'total');
+            })
+            ->beforeSerialization(function (Context $context, array $results) {
+                $this->loadRelations(Collection::make($results['models']), $context, $this->getInclude($context));
             })
             ->response(function (Context $context, array $results): Response {
                 $collection = $context->collection;

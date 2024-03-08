@@ -7,6 +7,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use RuntimeException;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Endpoint\Concerns\FindsResources;
+use Tobyz\JsonApiServer\Endpoint\Concerns\HasEagerLoading;
 use Tobyz\JsonApiServer\Endpoint\Concerns\ShowsResources;
 use Tobyz\JsonApiServer\Exception\ForbiddenException;
 use Tobyz\JsonApiServer\Exception\MethodNotAllowedException;
@@ -18,6 +19,7 @@ class Endpoint
     use ShowsResources;
     use FindsResources;
     use HasVisibility;
+    use HasEagerLoading;
 
     public string $method;
     public string $path;
