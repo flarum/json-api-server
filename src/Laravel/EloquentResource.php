@@ -26,8 +26,18 @@ use Tobyz\JsonApiServer\Schema\Field\Field;
 use Tobyz\JsonApiServer\Schema\Field\Relationship;
 use Tobyz\JsonApiServer\Schema\Field\ToMany;
 use Tobyz\JsonApiServer\Schema\Type\DateTime;
-use Tobyz\JsonApiServer\Schema\Type\Number;
 
+/**
+ * @template M of Model
+ * @template C of Context
+ * @extends AbstractResource<M, C>
+ * @implements Findable<M, C>
+ * @implements Listable<M, C>
+ * @implements Countable<C>
+ * @implements Creatable<M, C>
+ * @implements Updatable<M, C>
+ * @implements Deletable<M, C>
+ */
 abstract class EloquentResource extends AbstractResource implements
     Findable,
     Listable,
@@ -37,6 +47,10 @@ abstract class EloquentResource extends AbstractResource implements
     Updatable,
     Deletable
 {
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function resource(object $model, Context $context): ?string
     {
         $eloquentModel = $this->newModel($context);
@@ -48,11 +62,19 @@ abstract class EloquentResource extends AbstractResource implements
         return null;
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function getId(object $model, Context $context): string
     {
         return $model->getKey();
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function getValue(object $model, Field $field, Context $context): mixed
     {
         if ($field instanceof Relationship) {
@@ -62,6 +84,10 @@ abstract class EloquentResource extends AbstractResource implements
         }
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     protected function getAttributeValue(Model $model, Field $field, Context $context)
     {
         if ($field instanceof RelationAggregator && ($aggregate = $field->getRelationAggregate())) {
@@ -89,6 +115,10 @@ abstract class EloquentResource extends AbstractResource implements
         return $model->getAttribute($this->property($field));
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     protected function getRelationshipValue(Model $model, Relationship $field, Context $context)
     {
         $method = $this->method($field);
@@ -135,6 +165,9 @@ abstract class EloquentResource extends AbstractResource implements
         return $this->getAttributeValue($model, $field, $context);
     }
 
+    /**
+     * @param C $context
+     */
     public function query(Context $context): object
     {
         $query = $this->newModel($context)->query();
@@ -146,26 +179,43 @@ abstract class EloquentResource extends AbstractResource implements
 
     /**
      * Hook to scope a query for this resource.
+     *
+     * @param Builder<M> $query
+     * @param C $context
      */
     public function scope(Builder $query, Context $context): void
     {
     }
 
+    /**
+     * @param Builder<M> $query
+     * @param C $context
+     */
     public function results(object $query, Context $context): iterable
     {
         return $query->get()->all();
     }
 
+    /**
+     * @param Builder<M> $query
+     */
     public function paginate(object $query, OffsetPagination $pagination): void
     {
         $query->take($pagination->limit)->skip($pagination->offset);
     }
 
+    /**
+     * @param Builder<M> $query
+     * @param C $context
+     */
     public function count(object $query, Context $context): ?int
     {
         return $query->toBase()->getCountForPagination();
     }
 
+    /**
+     * @param C $context
+     */
     public function find(string $id, Context $context): ?object
     {
         if ($id === null) {
@@ -175,6 +225,11 @@ abstract class EloquentResource extends AbstractResource implements
         return $this->query($context)->find($id);
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     * @throws \Exception
+     */
     public function setValue(object $model, Field $field, mixed $value, Context $context): void
     {
         if ($field instanceof Relationship) {
@@ -207,6 +262,10 @@ abstract class EloquentResource extends AbstractResource implements
         $model->setAttribute($this->property($field), $value);
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function saveValue(object $model, Field $field, mixed $value, Context $context): void
     {
         if ($field instanceof ToMany) {
@@ -219,6 +278,10 @@ abstract class EloquentResource extends AbstractResource implements
         }
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function createAction(object $model, Context $context): object
     {
         if (method_exists($this, 'creating')) {
@@ -242,6 +305,10 @@ abstract class EloquentResource extends AbstractResource implements
         return $model;
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function create(object $model, Context $context): object
     {
         $this->saveModel($model, $context);
@@ -249,6 +316,10 @@ abstract class EloquentResource extends AbstractResource implements
         return $model;
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function updateAction(object $model, Context $context): object
     {
         if (method_exists($this, 'updating')) {
@@ -272,6 +343,10 @@ abstract class EloquentResource extends AbstractResource implements
         return $model;
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function update(object $model, Context $context): object
     {
         $this->saveModel($model, $context);
@@ -279,11 +354,19 @@ abstract class EloquentResource extends AbstractResource implements
         return $model;
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     protected function saveModel(Model $model, Context $context): void
     {
         $model->save();
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function deleteAction(object $model, Context $context): void
     {
         if (method_exists($this, 'deleting')) {
@@ -297,6 +380,10 @@ abstract class EloquentResource extends AbstractResource implements
         }
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function delete(object $model, Context $context): void
     {
         $model->delete();

@@ -4,6 +4,10 @@ namespace Tobyz\JsonApiServer\Resource;
 
 use Tobyz\JsonApiServer\Context;
 
+/**
+ * @template M of object
+ * @template C of Context
+ */
 interface Collection
 {
     /**
@@ -20,6 +24,9 @@ interface Collection
 
     /**
      * Get the name of the resource that represents the given model.
+     *
+     * @param M $model
+     * @param C $context
      */
     public function resource(object $model, Context $context): ?string;
 
@@ -35,6 +42,8 @@ interface Collection
 
     /**
      * Get the model ID being handled by this collection.
+     *
+     * @param C $context
      */
     public function id(Context $context): ?string;
 }

@@ -30,7 +30,7 @@ trait HasEagerLoading
      *
      * @param string|string[] $relations
      */
-    public function eagerLoad(array|string|callable $relations): self
+    public function eagerLoad(array|string|callable $relations): static
     {
         if (! is_callable($relations)) {
             $this->loadRelations = array_merge($this->loadRelations, array_map('strval', (array) $relations));
@@ -46,7 +46,7 @@ trait HasEagerLoading
      *
      * @param array<string, array<string>> $includedToRelations An array of included relation to relations to load 'includedRelation' => ['relation1', 'relation2']
      */
-    public function eagerLoadWhenIncluded(array $includedToRelations): self
+    public function eagerLoadWhenIncluded(array $includedToRelations): static
     {
         return $this->eagerLoad(function (array $included) use ($includedToRelations) {
             $relations = [];
@@ -65,15 +65,14 @@ trait HasEagerLoading
      * Allows loading a relationship with additional query modification.
      *
      * @param string $relation: Relationship name, see load method description.
-     * @template R of Relation
-     * @param (callable(Builder|R, Context, array): void) $callback
+     * @param callable $callback
      *
      * The callback to modify the query, should accept:
      * - \Illuminate\Database\Eloquent\Builder|\Illuminate\Database\Eloquent\Relations\Relation $query: A query object.
-     * - \Flarum\Api\Context $context: An instance of the API context.
+     * - Context $context: An instance of the API context.
      * - array $relations: An array of relations that are to be loaded.
      */
-    public function eagerLoadWhere(string $relation, callable $callback): self
+    public function eagerLoadWhere(string $relation, callable $callback): static
     {
         $this->loadRelationWhere = array_merge($this->loadRelationWhere, [$relation => $callback]);
 

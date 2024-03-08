@@ -5,6 +5,12 @@ namespace Tobyz\JsonApiServer\Resource;
 use Tobyz\JsonApiServer\Context;
 use Tobyz\JsonApiServer\Schema\Field\Field;
 
+/**
+ * @template M of object
+ * @template C of Context
+ * @implements Resource<M, C>
+ * @implements Collection<M, C>
+ */
 abstract class AbstractResource implements Resource, Collection
 {
     public function name(): string
@@ -17,6 +23,10 @@ abstract class AbstractResource implements Resource, Collection
         return [$this->type()];
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function resource(object $model, Context $context): ?string
     {
         return $this->type();
@@ -62,16 +72,27 @@ abstract class AbstractResource implements Resource, Collection
         return $this->sorts();
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function getId(object $model, Context $context): string
     {
         return $model->id;
     }
 
+    /**
+     * @param M $model
+     * @param C $context
+     */
     public function getValue(object $model, Field $field, Context $context): mixed
     {
         return $model->{$field->property ?: $field->name} ?? null;
     }
 
+    /**
+     * @param C $context
+     */
     public function id(Context $context): ?string
     {
         return $context->extractIdFromPath($context);
