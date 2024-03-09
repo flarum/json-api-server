@@ -97,12 +97,12 @@ trait HasValidationRules
 
     public function requiredOnCreate(): static
     {
-        return $this->required(fn ($model, Context $context) => $context->endpoint instanceof Create);
+        return $this->required(fn (Context $context) => $context->endpoint instanceof Create);
     }
 
     public function requiredOnUpdate(): static
     {
-        return $this->required(fn ($model, Context $context) => !$context->endpoint instanceof Update);
+        return $this->required(fn (Context $context) => !$context->endpoint instanceof Update);
     }
 
     public function requiredWith(array $fields, bool|callable $condition): static
@@ -117,27 +117,27 @@ trait HasValidationRules
 
     public function requiredOnCreateWith(array $fields): static
     {
-        return $this->requiredWith($fields, fn ($model, Context $context) => $context->endpoint instanceof Create);
+        return $this->requiredWith($fields, fn (Context $context) => $context->endpoint instanceof Create);
     }
 
     public function requiredOnUpdateWith(array $fields): static
     {
-        return $this->requiredWith($fields, fn ($model, Context $context) => $context->endpoint instanceof Update);
+        return $this->requiredWith($fields, fn (Context $context) => $context->endpoint instanceof Update);
     }
 
     public function requiredOnCreateWithout(array $fields): static
     {
-        return $this->requiredWithout($fields, fn ($model, Context $context) => $context->endpoint instanceof Create);
+        return $this->requiredWithout($fields, fn (Context $context) => $context->endpoint instanceof Create);
     }
 
     public function requiredOnUpdateWithout(array $fields): static
     {
-        return $this->requiredWithout($fields, fn ($model, Context $context) => $context->endpoint instanceof Update);
+        return $this->requiredWithout($fields, fn (Context $context) => $context->endpoint instanceof Update);
     }
 
     public function unique(string $table, string $column, bool $ignorable = false, bool|callable $condition = true): static
     {
-        return $this->rule(function ($model, Context $context) use ($table, $column, $ignorable) {
+        return $this->rule(function (Context $context) use ($table, $column, $ignorable) {
             $rule = Rule::unique($table, $column);
 
             if ($ignorable && ($modelId = $context->model?->getKey())) {
@@ -154,8 +154,6 @@ trait HasValidationRules
             return $callback;
         }
 
-        return (isset($context->model))
-            ? $callback($context->model, $context)
-            : $callback($context);
+        return $callback($context, $context->model);
     }
 }
