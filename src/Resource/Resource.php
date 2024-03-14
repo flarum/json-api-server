@@ -22,11 +22,6 @@ interface Resource
      *
      * @return Field[]
      */
-    public function fields(): array;
-
-    /**
-     * Resolve the fields for this resource.
-     */
     public function resolveFields(): array;
 
     /**

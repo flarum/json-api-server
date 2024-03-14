@@ -33,11 +33,6 @@ interface Collection
     /**
      * The collection's endpoints.
      */
-    public function endpoints(): array;
-
-    /**
-     * Resolve the endpoints for this collection.
-     */
     public function resolveEndpoints(): array;
 
     /**
