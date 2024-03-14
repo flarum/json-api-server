@@ -97,7 +97,7 @@ class Endpoint
             throw new RuntimeException("No route defined for endpoint [".static::class."]");
         }
 
-        if ($context->method() !== $this->method) {
+        if (strtolower($context->method()) !== strtolower($this->method)) {
             throw new MethodNotAllowedException();
         }
 
