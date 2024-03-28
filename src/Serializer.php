@@ -176,9 +176,11 @@ class Serializer
     {
         $i = 0;
         while ($this->deferred->count()) {
-            foreach ($this->deferred as $k => $resolve) {
+            $deferred = $this->deferred;
+
+            /** @var Closure $resolve */
+            while ($resolve = $deferred->shift()) {
                 $resolve();
-                $this->deferred->forget($k);
             }
 
             if ($i++ > 10) {
