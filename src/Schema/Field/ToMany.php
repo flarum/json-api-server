@@ -46,7 +46,7 @@ class ToMany extends Relationship
             throw new BadRequestException('relationship does not include data key');
         }
 
-        if (!array_is_list($value['data'])) {
+        if (!array_is_list($value['data'] ?? [])) {
             throw (new BadRequestException(
                 'relationship data must be a list of identifier objects',
             ))->setSource(['pointer' => '/data']);
