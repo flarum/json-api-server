@@ -4,6 +4,7 @@ namespace Tobyz\Tests\JsonApiServer\specification;
 
 use Tobyz\JsonApiServer\Endpoint\Index;
 use Tobyz\JsonApiServer\Endpoint\Show;
+use Tobyz\JsonApiServer\Exception\BadRequestException;
 use Tobyz\JsonApiServer\JsonApi;
 use Tobyz\JsonApiServer\Schema\Field\Attribute;
 use Tobyz\JsonApiServer\Schema\Field\ToMany;
@@ -270,5 +271,36 @@ class InclusionOfRelatedResourcesTest extends AbstractTestCase
             ],
             $response->getBody(),
         );
+    }
+
+    public function test_relationship_inclusion_with_array_of_paths()
+    {
+        $response = $this->api->handle(
+            $this->buildRequest('GET', '/articles/1')->withQueryParams([
+                'include' => ['author', 'comments.author'],
+            ]),
+        );
+
+        $this->assertCount(4, json_decode($response->getBody(), true)['included'] ?? []);
+    }
+
+    public function test_bad_request_error_if_include_path_is_not_a_string()
+    {
+        try {
+            $this->api->handle(
+                $this->buildRequest('GET', '/articles/1')->withQueryParams([
+                    'include' => [['author']],
+                ]),
+            );
+        } catch (BadRequestException $e) {
+            $this->assertEquals(
+                'include',
+                $e->getJsonApiErrors()[0]['source']['parameter'] ?? null,
+            );
+
+            return;
+        }
+
+        $this->fail('Expected a BadRequestException');
     }
 }

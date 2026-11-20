@@ -104,7 +104,12 @@ class OffsetPagination implements Pagination
     private function getOffset(Context $context): int
     {
         if ($offset = $context->queryParam('page')['offset'] ?? null) {
-            if (preg_match('/\D+/', $offset) || $offset < 0) {
+            if (
+                is_array($offset) ||
+                preg_match('/\D+/', $offset) ||
+                $offset < 0 ||
+                $this->overflowsInt($offset)
+            ) {
                 throw (new BadRequestException(
                     'page[offset] must be a non-negative integer',
                 ))->setSource([
@@ -121,7 +126,7 @@ class OffsetPagination implements Pagination
     private function getLimit(Context $context): int
     {
         if ($limit = $context->queryParam('page')['limit'] ?? null) {
-            if (preg_match('/\D+/', $limit) || $limit < 1) {
+            if (is_array($limit) || preg_match('/\D+/', $limit) || $limit < 1) {
                 throw (new BadRequestException(
                     'page[limit] must be a positive integer',
                 ))->setSource(['parameter' => 'page[limit]']);
@@ -131,9 +136,26 @@ class OffsetPagination implements Pagination
                 $limit = min($this->maxLimit, $limit);
             }
 
+            if ($this->overflowsInt($limit)) {
+                throw (new BadRequestException(
+                    'page[limit] must be a positive integer',
+                ))->setSource(['parameter' => 'page[limit]']);
+            }
+
             return $limit;
         }
 
         return $this->defaultLimit;
+    }
+
+    private function overflowsInt($value): bool
+    {
+        if (!is_string($value)) {
+            return false;
+        }
+
+        $digits = ltrim($value, '0') ?: '0';
+
+        return (string) (int) $digits !== $digits;
     }
 }
