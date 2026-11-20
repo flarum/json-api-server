@@ -44,6 +44,12 @@ trait IncludesData
         $tree = [];
 
         foreach (is_array($include) ? $include : explode(',', $include) as $path) {
+            if (!is_string($path)) {
+                throw (new BadRequestException('Invalid include'))->setSource([
+                    'parameter' => 'include',
+                ]);
+            }
+
             $array = &$tree;
 
             foreach (explode('.', $path) as $key) {
